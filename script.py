@@ -11,6 +11,7 @@ import daily_event_monitor
 import bs4
 import requests
 import loguru
+import time
 
 
 def scrape_most_read():
