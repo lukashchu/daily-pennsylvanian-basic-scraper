@@ -33,7 +33,7 @@ def scrape_most_read():
     if req.ok:
         soup = bs4.BeautifulSoup(req.text, "html.parser")
         # Select the anchor element for the top most read story
-        target_element = soup.select_one("#mostRead div.most-read-item a.frontpage-link.standard-link")
+        target_element = soup.select_one("#mostRead a.frontpage-link.standard-link")
         data_point = target_element.get_text(strip=True) if target_element else ""
         loguru.logger.info(f"Data point: {data_point}")
         return data_point
