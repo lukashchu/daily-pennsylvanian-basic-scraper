@@ -27,6 +27,8 @@ def scrape_most_read():
     loguru.logger.info(f"Request URL: {req.url}")
     loguru.logger.info(f"Request status code: {req.status_code}")
 
+    time.sleep(5)
+
     if req.ok:
         soup = bs4.BeautifulSoup(req.text, "html.parser")
         # Select the anchor element for the top most read story
