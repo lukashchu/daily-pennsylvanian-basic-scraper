@@ -28,6 +28,9 @@ def scrape_most_read():
     loguru.logger.info(f"Request URL: {req.url}")
     loguru.logger.info(f"Request status code: {req.status_code}")
 
+    raw_html = req.text
+    print(raw_html)
+
     time.sleep(5)
 
     if req.ok:
