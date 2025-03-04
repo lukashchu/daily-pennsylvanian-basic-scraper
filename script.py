@@ -13,9 +13,9 @@ import requests
 import loguru
 
 
-def scrape_data_point():
+def scrape_most_read():
     """
-    Scrapes the main headline from The Daily Pennsylvanian home page.
+    Scrapes the #1 most read article from The Daily Pennsylvanian home page.
 
     Returns:
         str: The headline text if found, otherwise an empty string.
@@ -26,14 +26,14 @@ def scrape_data_point():
 
     if req.ok:
         soup = bs4.BeautifulSoup(req.text, "html.parser")
-        target_element = soup.find("a", class_="frontpage-link")
-        data_point = "" if target_element is None else target_element.text
+        # Select the anchor element for the top most read story
+        target_element = soup.select_one("div.most-read-item a.frontpage-link.standard-link")
+        data_point = target_element.get_text(strip=True) if target_element else ""
         loguru.logger.info(f"Data point: {data_point}")
         return data_point
 
 
 if __name__ == "__main__":
-
     # Setup logger to track runtime
     loguru.logger.add("scrape.log", rotation="1 day")
 
@@ -47,30 +47,29 @@ if __name__ == "__main__":
 
     # Load daily event monitor
     loguru.logger.info("Loading daily event monitor")
-    dem = daily_event_monitor.DailyEventMonitor(
-        "data/daily_pennsylvanian_headlines.json"
-    )
+    dem = daily_event_monitor.DailyEventMonitor("data/daily_pennsylvanian_headlines.json")
 
-    # Run scrape
-    loguru.logger.info("Starting scrape")
+    # Run scrape for most-read article
+    loguru.logger.info("Starting scrape for top most-read article")
     try:
-        data_point = scrape_data_point()
+        data_point = scrape_most_read()
     except Exception as e:
         loguru.logger.error(f"Failed to scrape data point: {e}")
         data_point = None
 
-    # Save data
+    # Save data if scrape was successful
     if data_point is not None:
         dem.add_today(data_point)
         dem.save()
         loguru.logger.info("Saved daily event monitor")
 
+    # (Optional) Print tree and file contents for verification
     def print_tree(directory, ignore_dirs=[".git", "__pycache__"]):
         loguru.logger.info(f"Printing tree of files/dirs at {directory}")
         for root, dirs, files in os.walk(directory):
             dirs[:] = [d for d in dirs if d not in ignore_dirs]
             level = root.replace(directory, "").count(os.sep)
-            indent = " " * 4 * (level)
+            indent = " " * 4 * level
             loguru.logger.info(f"{indent}+--{os.path.basename(root)}/")
             sub_indent = " " * 4 * (level + 1)
             for file in files:
@@ -82,6 +81,5 @@ if __name__ == "__main__":
     with open(dem.file_path, "r") as f:
         loguru.logger.info(f.read())
 
-    # Finish
     loguru.logger.info("Scrape complete")
     loguru.logger.info("Exiting")

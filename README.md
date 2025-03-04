@@ -10,6 +10,27 @@ Tools like GitHub Actions, GitLab CI and others make git scraping adaptable to d
 
 This template includes a sample workflow to demonstrate the core git scraping capabilities. Read on to learn how to customize it!
 
+## Changes Made
+
+- **Updated Scraping Function:**  
+  Changed the function to `scrape_most_read()` to target the top most-read article instead of the main headline.
+
+- **CSS Selector Adjustment:**  
+  Replaced the original element lookup with:
+  ```python
+  target_element = soup.select_one("div.most-read-item a.frontpage-link.standard-link")
+  ```
+  This specifically selects the anchor element within the `most-read-item` container.
+  
+- **Text Extraction:**
+  Utilized `get_text(strip=True)` to cleanly extract the article headline text.
+
+- **Main Block Update:**
+  Modified the main execution block to call `scrape_most_read()` rather than the previous scraping function.
+
+- **Logging Consistency:**
+  Maintained logging for request details, scraped data, and any errors during the scraping process.
+
 ## Overview
 
 The workflow defined in `.github/workflows/scrape.yaml` runs on a defined schedule to:
