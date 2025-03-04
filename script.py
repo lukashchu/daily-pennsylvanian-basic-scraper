@@ -13,6 +13,11 @@ import requests
 import loguru
 import time
 
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 
 def scrape_most_read():
     """
@@ -21,25 +26,34 @@ def scrape_most_read():
     Returns:
         str: The headline text if found, otherwise an empty string.
     """
-    headers = {
-        "User-Agent": "cis3500-scraper"
-    }
-    req = requests.get("https://www.thedp.com", headers=headers)
-    loguru.logger.info(f"Request URL: {req.url}")
-    loguru.logger.info(f"Request status code: {req.status_code}")
+    url = "https://www.thedp.com"
+    
+    # Initialize the Selenium webdriver (Make sure chromedriver is installed)
+    driver = webdriver.Chrome()  # or use webdriver.Firefox()
+    driver.get(url)
 
-    raw_html = req.text
-    print(raw_html)
+    try:
+        # Wait until the most read section is loaded (timeout = 10 sec)
+        most_read_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#mostRead a.frontpage-link.standard-link"))
+        )
 
-    time.sleep(5)
+        # Get the text of the first most-read article
+        most_read_headline = most_read_element.text
+        most_read_link = most_read_element.get_attribute("href")
 
-    if req.ok:
-        soup = bs4.BeautifulSoup(req.text, "html.parser")
-        # Select the anchor element for the top most read story
-        target_element = soup.select_one("#mostRead a.frontpage-link.standard-link")
-        data_point = target_element.get_text(strip=True) if target_element else ""
-        loguru.logger.info(f"Data point: {data_point}")
-        return data_point
+        print(f"Most Read Headline: {most_read_headline}")
+        print(f"Most Read Link: {most_read_link}")
+
+    except Exception as e:
+        print(f"Error: {e}")
+        most_read_headline, most_read_link = None, None
+
+    finally:
+        driver.quit()  # Close the browser
+
+    return most_read_headline, most_read_link
+
 
 
 if __name__ == "__main__":
