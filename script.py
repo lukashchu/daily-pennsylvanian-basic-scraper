@@ -32,6 +32,8 @@ def scrape_most_read():
     driver = webdriver.Chrome()  # or use webdriver.Firefox()
     driver.get(url)
 
+    most_read_headline = ""
+
     try:
         # Wait until the most read section is loaded (timeout = 10 sec)
         most_read_element = WebDriverWait(driver, 10).until(
@@ -47,12 +49,12 @@ def scrape_most_read():
 
     except Exception as e:
         print(f"Error: {e}")
-        most_read_headline, most_read_link = None, None
+        most_read_headline = ""  # Return an empty string in case of error
 
     finally:
         driver.quit()  # Close the browser
 
-    return most_read_headline, most_read_link
+    return most_read_headline
 
 
 
