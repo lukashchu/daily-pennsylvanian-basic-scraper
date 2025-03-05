@@ -11,54 +11,29 @@ import daily_event_monitor
 import bs4
 import requests
 import loguru
-import time
-
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 
-def scrape_most_read():
+def scrape_data_point():
     """
-    Scrapes the #1 most read article from The Daily Pennsylvanian home page.
+    Scrapes the main headline from The Daily Pennsylvanian home page.
 
     Returns:
         str: The headline text if found, otherwise an empty string.
     """
-    url = "https://www.thedp.com"
-    
-    # Initialize the Selenium webdriver (Make sure chromedriver is installed)
-    driver = webdriver.Chrome()  # or use webdriver.Firefox()
-    driver.get(url)
+    req = requests.get("https://www.thedp.com")
+    loguru.logger.info(f"Request URL: {req.url}")
+    loguru.logger.info(f"Request status code: {req.status_code}")
 
-    most_read_headline = ""
-
-    try:
-        # Wait until the most read section is loaded (timeout = 10 sec)
-        most_read_element = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "#mostRead a.frontpage-link.standard-link"))
-        )
-
-        # Get the text of the first most-read article
-        most_read_headline = most_read_element.text
-        most_read_link = most_read_element.get_attribute("href")
-
-        print(f"Most Read Headline: {most_read_headline}")
-        print(f"Most Read Link: {most_read_link}")
-
-    except Exception as e:
-        print(f"Error: {e}")
-        most_read_headline = ""  # Return an empty string in case of error
-
-    finally:
-        driver.quit()  # Close the browser
-
-    return most_read_headline
-
+    if req.ok:
+        soup = bs4.BeautifulSoup(req.text, "html.parser")
+        target_element = soup.find("a", class_="frontpage-link")
+        data_point = "" if target_element is None else target_element.text
+        loguru.logger.info(f"Data point: {data_point}")
+        return data_point
 
 
 if __name__ == "__main__":
+
     # Setup logger to track runtime
     loguru.logger.add("scrape.log", rotation="1 day")
 
@@ -72,29 +47,30 @@ if __name__ == "__main__":
 
     # Load daily event monitor
     loguru.logger.info("Loading daily event monitor")
-    dem = daily_event_monitor.DailyEventMonitor("data/daily_pennsylvanian_headlines.json")
+    dem = daily_event_monitor.DailyEventMonitor(
+        "data/daily_pennsylvanian_headlines.json"
+    )
 
-    # Run scrape for most-read article
-    loguru.logger.info("Starting scrape for top most-read article")
+    # Run scrape
+    loguru.logger.info("Starting scrape")
     try:
-        data_point = scrape_most_read()
+        data_point = scrape_data_point()
     except Exception as e:
         loguru.logger.error(f"Failed to scrape data point: {e}")
         data_point = None
 
-    # Save data if scrape was successful
+    # Save data
     if data_point is not None:
         dem.add_today(data_point)
         dem.save()
         loguru.logger.info("Saved daily event monitor")
 
-    # (Optional) Print tree and file contents for verification
     def print_tree(directory, ignore_dirs=[".git", "__pycache__"]):
         loguru.logger.info(f"Printing tree of files/dirs at {directory}")
         for root, dirs, files in os.walk(directory):
             dirs[:] = [d for d in dirs if d not in ignore_dirs]
             level = root.replace(directory, "").count(os.sep)
-            indent = " " * 4 * level
+            indent = " " * 4 * (level)
             loguru.logger.info(f"{indent}+--{os.path.basename(root)}/")
             sub_indent = " " * 4 * (level + 1)
             for file in files:
@@ -106,5 +82,6 @@ if __name__ == "__main__":
     with open(dem.file_path, "r") as f:
         loguru.logger.info(f.read())
 
+    # Finish
     loguru.logger.info("Scrape complete")
     loguru.logger.info("Exiting")

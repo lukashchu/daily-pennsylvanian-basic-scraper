@@ -9,7 +9,6 @@ loguru = "*"
 pytz = "*"
 requests = "*"
 waybackpy = "*"
-selenium = "*"
 
 [dev-packages]
 ipykernel = "*"
