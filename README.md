@@ -31,6 +31,9 @@ This template includes a sample workflow to demonstrate the core git scraping ca
 - **Logging Consistency:**
   Maintained logging for request details, scraped data, and any errors during the scraping process.
 
+- **Challenges Faced:**
+  Because of the use of JavaScript to load elements in the Daily Pennsylvanian website, these changes did not work, so I reverted to showing the main headline twice a day.
+
 ## Overview
 
 The workflow defined in `.github/workflows/scrape.yaml` runs on a defined schedule to:
